@@ -31,7 +31,7 @@ import com.google.zxing.Result;
 import java.util.Arrays;
 
 
-//打开相册并选择加载的图片
+
 public class MainActivity extends AppCompatActivity {
 
     String[] mPermissionList = new String[]{
@@ -40,16 +40,18 @@ public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_PICK_IMAGE = 11101;
     private ImageView mShowImg;
     private Button btnOpenCamera;
+    private Button btnDetect;
+    private Button btnCvTest;
     private Result result;
     private TextView tv_result;
-
+    private String loadPicPath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mShowImg = (ImageView) findViewById(R.id.imageView);  //图片视图
-        tv_result = findViewById(R.id.tv_result);
+        mShowImg = (ImageView) findViewById(R.id.imageView);       //图片视图
+        tv_result = findViewById(R.id.tv_result);                  //识别结果tv
 
         btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +59,31 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, CameraActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnDetect = findViewById(R.id.btnDetect);          //识别加载的图片
+        btnDetect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);
+                    result = DecoderUtil.decodeQR(bitmap);
+                    tv_result.setText("Result:"+result.getText());
+                } catch (Exception e) {
+                    Log.w("MainActivity", "Cannot detect" , e);
+                    tv_result.setText("Can't detect");
+                }
+            }
+        });
+
+        btnCvTest = findViewById(R.id.btnCVTest);          //简单测试opencv是否能用,里边只是一个简单的灰度测试
+        btnCvTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, GrayTestActivity.class);
                 startActivity(intent);
             }
         });
@@ -85,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
-
     /*
      * 方法名： getImage()
      * 功    能：从相册中获取图片文件
@@ -117,9 +143,9 @@ public class MainActivity extends AppCompatActivity {
             switch (requestCode) {
                 case REQUEST_PICK_IMAGE:
                     if (data != null) {
-                        String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
-                        Log.e("MainActivity", realPathFromUri);
-                        showImg(realPathFromUri);
+                        loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
+                        Log.e("MainActivity", loadPicPath);
+                        showImg(loadPicPath);   //加载图片,同时图片路径存储在loadPicPath中
                     } else {
                         Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
                     }
@@ -140,21 +166,21 @@ public class MainActivity extends AppCompatActivity {
 
     /*
      * 方法名： showImg(String path)
-     * 功    能：将选中的图片显示到主界面并把解码结果显示到界面
-     * 参    数：
+     * 功    能：显示图片到界面
+     * 参    数：图片路径
      * 返回值：无
      */
     public void showImg(String path){
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         Log.i("MainActivity",path);
         mShowImg.setImageBitmap(bitmap);
-        try {
-            result = DecoderUtil.decodeQR(bitmap);
-            tv_result.setText("Result:"+result.getText());
-        } catch (Exception e) {
-            Log.w("MainActivity", "Cannot detect" , e);
-            tv_result.setText("Can't detect");
-        }
+//        try {
+//            result = DecoderUtil.decodeQR(bitmap);
+//            tv_result.setText("Result:"+result.getText());
+//        } catch (Exception e) {
+//            Log.w("MainActivity", "Cannot detect" , e);
+//            tv_result.setText("Can't detect");
+//        }
     }
 
 }

@@ -14,17 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".SlidePageActivity"></activity>
-        <activity android:name=".PhotoActivity" />
         <activity
             android:name=".CameraActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".GrayTestActivity"
             android:label="@string/title_activity_gray_test"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".QRActivity"
-            android:label="@string/title_activity_q_r"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".MainActivity">
             <intent-filter>

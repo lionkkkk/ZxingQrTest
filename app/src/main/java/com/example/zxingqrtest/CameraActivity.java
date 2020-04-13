@@ -1,7 +1,6 @@
 package com.example.zxingqrtest;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,11 +9,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.zxingqrtest.Utils.PollingUtil;
 import com.google.android.cameraview.CameraView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -46,7 +41,6 @@ public class CameraActivity extends AppCompatActivity {
     private FloatingActionButton fabFlash;
     private FloatingActionButton fabTake;
     private FloatingActionButton fabDetect;
-    private PollingUtil pollingUtil;
     private int count=0;
     private LinearLayout linTouch;
     //自动拍照
@@ -101,7 +95,6 @@ public class CameraActivity extends AppCompatActivity {
                 case R.id.take_picture:   //单独拍一张照片
                     handler.removeCallbacks(runnableAuto);  //停止连拍的线程
                     if (mCameraView != null) {
-//                        Camera1
                         mCameraView.takePicture();
                     }
                     break;
@@ -123,7 +116,6 @@ public class CameraActivity extends AppCompatActivity {
                 case R.id.fab_detect:
                     handler.post(runnableAuto);
                     break;
-//                case R.id.camera:
 
                     }
 
@@ -181,6 +173,7 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
+    //获取背景
     private Handler getBackgroundHandler() {
         if (mBackgroundHandler == null) {
             HandlerThread thread = new HandlerThread("background");

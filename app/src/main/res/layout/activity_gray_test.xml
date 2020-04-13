@@ -46,11 +46,11 @@
             android:layout_height="match_parent"
             android:layout_weight="1">
 
-            <TextView
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="灰度化"
-                android:id="@+id/textView_togray" />
+                android:id="@+id/btn2Gray" />
 
             <ImageView
                 android:layout_width="match_parent"

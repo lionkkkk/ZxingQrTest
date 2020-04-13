@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,9 +24,9 @@ import org.opencv.imgproc.Imgproc;
 
 public class GrayTestActivity  extends AppCompatActivity implements View.OnClickListener{
     ImageView img_after;
-    TextView text_togray;
     Bitmap srcBitmap;
     Bitmap grayBitmap;
+    private Button btn2Gray;
     private static boolean flag = true;
     //private static boolean isFirst = true;
     private static final String TAG = "GrayTest";
@@ -34,8 +35,8 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gray_test);
         img_after=(ImageView)findViewById(R.id.imageView_after);
-        text_togray=(TextView)findViewById(R.id.textView_togray);
-        text_togray.setOnClickListener(this);
+        btn2Gray=(Button) findViewById(R.id.btn2Gray);
+        btn2Gray.setOnClickListener(this);
 
     }
     //OpenCV库加载并初始化成功后的回调函数
@@ -73,7 +74,7 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
         grayBitmap = Bitmap.createBitmap(srcBitmap.getWidth(), srcBitmap.getHeight(), Bitmap.Config.RGB_565);
         Utils.bitmapToMat(srcBitmap, rgbMat);//convert original bitmap to Mat, R G B.
         Imgproc.cvtColor(rgbMat, grayMat, Imgproc.COLOR_RGB2GRAY);//rgbMat to gray grayMat
-        Imgproc.adaptiveThreshold(grayMat,binaMat,255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_OTSU,11,1);
+        Imgproc.adaptiveThreshold(grayMat,binaMat,255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11,1);
         Utils.matToBitmap(binaMat, grayBitmap); //convert mat to bitmap
         Log.i(TAG, "procSrc2Gray sucess...");
     }
@@ -82,7 +83,7 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
     {
         switch(v.getId())
         {
-            case R.id.textView_togray:
+            case R.id.btn2Gray:
                 procSrc2Gray();
                 img_after.setImageBitmap(grayBitmap) ;
                 break;
