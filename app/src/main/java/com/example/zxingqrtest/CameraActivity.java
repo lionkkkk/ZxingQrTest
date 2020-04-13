@@ -17,10 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.google.android.cameraview.CameraView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,12 +35,11 @@ public class CameraActivity extends AppCompatActivity {
 
     //用于在子线程中处理图片数据
     private Handler mBackgroundHandler;
-    private static Handler mHandler=new Handler();
+    //相机预览界面上得几个按钮
     private FloatingActionButton fabFlash;
     private FloatingActionButton fabTake;
     private FloatingActionButton fabDetect;
-    private int count=0;
-    private LinearLayout linTouch;
+
     //自动拍照
     Handler handler = new Handler();
     Runnable runnableAuto = new Runnable() {
@@ -83,7 +80,6 @@ public class CameraActivity extends AppCompatActivity {
         if(fabDetect!=null){
             fabDetect.setOnClickListener(mOnClickListener);
         }
-
 
     }
 
@@ -228,19 +224,6 @@ public class CameraActivity extends AppCompatActivity {
         }
     };
 
-
-    final Handler handlerStop = new Handler() {
-         public void handleMessage(Message msg) {
-                         switch (msg.what) {
-                             case 1:
-                                     count = 0;
-                                     handler.removeCallbacks(runnableAuto);
-                                     break;
-                             }
-                        super.handleMessage(msg);
-                     }
-
-             };
 
 }
 

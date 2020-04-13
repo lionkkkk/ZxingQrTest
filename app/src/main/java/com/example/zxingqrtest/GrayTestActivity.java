@@ -8,12 +8,11 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.zxingqrtest.R;
+
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -28,7 +27,6 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
     Bitmap grayBitmap;
     private Button btn2Gray;
     private static boolean flag = true;
-    //private static boolean isFirst = true;
     private static final String TAG = "GrayTest";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,28 +39,18 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
     }
     //OpenCV库加载并初始化成功后的回调函数
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-
         @Override
         public void onManagerConnected(int status) {
             // TODO Auto-generated method stub
             switch (status){
                 case BaseLoaderCallback.SUCCESS:
                     Log.i(TAG, "成功加载");
-                    Toast toast = Toast.makeText(getApplicationContext(),
-                            "成功加载！", Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
                     break;
                 default:
                     super.onManagerConnected(status);
                     Log.i(TAG, "加载失败");
-                    Toast toast1 = Toast.makeText(getApplicationContext(),
-                            "加载失败！", Toast.LENGTH_LONG);
-                    toast1.setGravity(Gravity.CENTER, 0, 0);
-                    toast1.show();
                     break;
             }
-
         }
     };
 
@@ -76,7 +64,6 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
         Imgproc.cvtColor(rgbMat, grayMat, Imgproc.COLOR_RGB2GRAY);//rgbMat to gray grayMat
         Imgproc.adaptiveThreshold(grayMat,binaMat,255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11,1);
         Utils.matToBitmap(binaMat, grayBitmap); //convert mat to bitmap
-        Log.i(TAG, "procSrc2Gray sucess...");
     }
     @Override
     public void onClick(View v)
@@ -89,7 +76,6 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
                 break;
         }
     }
-
     @Override
     public void onResume()
     {

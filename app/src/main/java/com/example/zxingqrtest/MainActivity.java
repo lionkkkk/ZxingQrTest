@@ -34,7 +34,7 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    String[] mPermissionList = new String[]{
+    private String[] mPermissionList = new String[]{
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE};
     public static final int REQUEST_PICK_IMAGE = 11101;
@@ -49,11 +49,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initView();
 
-        mShowImg = (ImageView) findViewById(R.id.imageView);       //图片视图
-        tv_result = findViewById(R.id.tv_result);                  //识别结果tv
 
-        btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnDetect = findViewById(R.id.btnDetect);          //识别加载的图片
+
         btnDetect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnCvTest = findViewById(R.id.btnCVTest);          //简单测试opencv是否能用,里边只是一个简单的灰度测试
+
         btnCvTest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,6 +86,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    /*
+     * 方法名： initView()
+     * 功    能：初始化各种控件
+     * 参    数：
+     * 返回值：无
+     */
+    private void initView(){
+        mShowImg = (ImageView) findViewById(R.id.imageView);       //图片视图
+        tv_result = findViewById(R.id.tv_result);                  //识别结果tv
+        btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
+        btnDetect = findViewById(R.id.btnDetect);          //识别加载的图片
+        btnCvTest = findViewById(R.id.btnCVTest);
     }
 
     /*
@@ -112,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
+
+
     /*
      * 方法名： getImage()
      * 功    能：从相册中获取图片文件
