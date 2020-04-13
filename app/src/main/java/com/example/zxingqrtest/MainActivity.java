@@ -1,0 +1,160 @@
+/*
+ * 文件名：MainActivity
+ * 描    述：主界面
+ * 作    者：We Chan
+ */
+package com.example.zxingqrtest;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
+import android.os.Bundle;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import com.example.zxingqrtest.Utils.DecoderUtil;
+import com.example.zxingqrtest.Utils.RealPathFromUriUtils;
+import com.google.zxing.Result;
+import java.util.Arrays;
+
+
+//打开相册并选择加载的图片
+public class MainActivity extends AppCompatActivity {
+
+    String[] mPermissionList = new String[]{
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE};
+    public static final int REQUEST_PICK_IMAGE = 11101;
+    private ImageView mShowImg;
+    private Button btnOpenCamera;
+    private Result result;
+    private TextView tv_result;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        mShowImg = (ImageView) findViewById(R.id.imageView);  //图片视图
+        tv_result = findViewById(R.id.tv_result);
+
+        btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
+        btnOpenCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, CameraActivity.class);
+                startActivity(intent);
+            }
+        });
+
+    }
+
+    /*
+     * 方法名：onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+     * 功    能：获取文件读取请求，系统函数
+     * 参    数：
+     * 返回值：无
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 100:
+                boolean writeExternalStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                boolean readExternalStorage = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                Log.e("MainActivity", Arrays.toString(grantResults));
+                if (grantResults.length > 0 && writeExternalStorage && readExternalStorage) {
+                    getImage();
+                } else {
+                    Toast.makeText(this, "请设置必要权限", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    /*
+     * 方法名： getImage()
+     * 功    能：从相册中获取图片文件
+     * 参    数：
+     * 返回值：无
+     */
+    private void getImage() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("image/*"),
+                    REQUEST_PICK_IMAGE);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("image/*");
+            startActivityForResult(intent, REQUEST_PICK_IMAGE);
+        }
+    }
+
+    /*
+     * 方法名： onActivityResult()
+     * 功    能：获取选中的图片的Uri,并显示到主界面
+     * 参    数：
+     * 返回值：无
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode) {
+                case REQUEST_PICK_IMAGE:
+                    if (data != null) {
+                        String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
+                        Log.e("MainActivity", realPathFromUri);
+                        showImg(realPathFromUri);
+                    } else {
+                        Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+        }
+    }
+
+    /*
+     * 方法名： openAlbum()
+     * 功    能：“图片加载”按钮的点击事件
+     * 参    数：
+     * 返回值：无
+     */
+    public void openAlbum(View view) {
+        ActivityCompat.requestPermissions(MainActivity.this, mPermissionList, 100);
+    }
+
+    /*
+     * 方法名： showImg(String path)
+     * 功    能：将选中的图片显示到主界面并把解码结果显示到界面
+     * 参    数：
+     * 返回值：无
+     */
+    public void showImg(String path){
+        Bitmap bitmap = BitmapFactory.decodeFile(path);
+        Log.i("MainActivity",path);
+        mShowImg.setImageBitmap(bitmap);
+        try {
+            result = DecoderUtil.decodeQR(bitmap);
+            tv_result.setText("Result:"+result.getText());
+        } catch (Exception e) {
+            Log.w("MainActivity", "Cannot detect" , e);
+            tv_result.setText("Can't detect");
+        }
+    }
+
+}

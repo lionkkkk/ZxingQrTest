@@ -1,0 +1,3 @@
+rootProject.name='ZxingQrTest'
+include ':app', 'Camera', 'camera', 'thirdlib'
+include ':open'
