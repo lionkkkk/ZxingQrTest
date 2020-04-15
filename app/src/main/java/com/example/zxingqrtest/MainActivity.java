@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(MainActivity.this, GrayTestActivity.class);
+                intent.setClass(MainActivity.this, SlideTestActivity.class);
                 startActivity(intent);
             }
         });
@@ -185,16 +185,20 @@ public class MainActivity extends AppCompatActivity {
      * 返回值：无
      */
     public void showImg(String path){
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
         Log.i("MainActivity",path);
-        mShowImg.setImageBitmap(bitmap);
-//        try {
-//            result = DecoderUtil.decodeQR(bitmap);
-//            tv_result.setText("Result:"+result.getText());
-//        } catch (Exception e) {
-//            Log.w("MainActivity", "Cannot detect" , e);
-//            tv_result.setText("Can't detect");
-//        }
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 2;
+        Bitmap bm = BitmapFactory.decodeFile(path, options);
+        Log.i("MainActivity", "压缩后图片的大小" + (bm.getByteCount() / 1024 / 1024)
+                + "M宽度为" + bm.getWidth() + "高度为" + bm.getHeight());
+        mShowImg.setImageBitmap(bm);
+        try {
+            result = DecoderUtil.decodeQR(bm);
+            tv_result.setText("Result:"+result.getText());
+        } catch (Exception e) {
+            Log.w("MainActivity", "Cannot detect" , e);
+            tv_result.setText("Can't detect");
+        }
     }
 
 }

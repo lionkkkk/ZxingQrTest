@@ -13,10 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CameraxTestActivity"></activity>
-        <activity
-            android:name=".CameraActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".SlideTestActivity" />
+        <activity android:name=".CameraxTestActivity" />
         <activity
             android:name=".GrayTestActivity"
             android:label="@string/title_activity_gray_test"

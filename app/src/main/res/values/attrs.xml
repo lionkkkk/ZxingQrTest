@@ -5,4 +5,12 @@
         <attr name="focus_success_id" format="integer" />
         <attr name="focus_fail_id" format="integer" />
     </declare-styleable>
+    <declare-styleable name="SlideImageView">
+        <attr name="textMargin" format="dimension"/>
+        <attr name="nameTextSize" format="dimension"/>
+        <attr name="nameTextColor" format="color"/>
+        <attr name="indicatorColor" format="color"/>
+        <attr name="indicatorRadius" format="dimension"/>
+        <attr name="emptyColor" format="color"/>
+    </declare-styleable>
 </resources>

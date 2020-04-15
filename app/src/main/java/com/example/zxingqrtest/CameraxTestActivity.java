@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.util.Size;
 import android.view.OrientationEventListener;
 import android.view.Surface;
@@ -60,6 +63,7 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
 
     private CameraXCustomPreviewView mViewFinder;
     private ImageButton mCaptureButton;
+    private ImageButton imgBtnAuto;
     private FocusImageView mFocusView;
     private AppCompatButton mBtnLight;
 
@@ -69,6 +73,26 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
     private Executor executor;
     private CameraInfo mCameraInfo;
     private CameraControl mCameraControl;
+    private int count =0 ;
+    private float posX[]={250,850,250,850,550};
+    private float posY[]={600,600,1400,1400,1000};  //自定义对焦坐标
+
+    //自动拍照
+    Handler handler=new Handler();
+    Runnable runnableAuto = new Runnable() {
+        @Override
+        public void run() {
+            setFocusPosition(posX[count],posY[count]);  //设定对焦坐标
+            count++;
+            saveImage();
+            if(count>5){
+                Message message = new Message();
+                message.what=1;
+                handlerStop.sendMessage(message);
+            }
+            handler.postDelayed(runnableAuto,2000);
+        }
+    };
 
 
     @Override
@@ -76,45 +100,75 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camerax_test);
         initEventAndData();
-
     }
 
-
-
-
+    /*
+     * 方法名： initEventAndData()
+     * 功    能：初始化
+     * 参    数：
+     * 返回值：无
+     */
     protected void initEventAndData() {
-//        mTopBar.setVisibility(View.GONE);
         initView();
+        initListenner();
         initCamera();
         initImageAnalysis();
         initImageCapture();
     }
 
+    /*
+     * 方法名： initView()
+     * 功    能：初始化控件
+     * 参    数：
+     * 返回值：无
+     */
     private void initView(){
         mViewFinder = findViewById(R.id.view_finder);
         mCaptureButton =findViewById(R.id.capture_button);
         mFocusView = findViewById(R.id.focus_view);
         mBtnLight = findViewById(R.id.btn_light);
-
+        imgBtnAuto= findViewById(R.id.btnAutoTake);
     }
 
+    /*
+     * 方法名： 初始化监听()
+     * 功    能：初始化控件
+     * 参    数：
+     * 返回值：无
+     */
+    private  void initListenner(){
+        mCaptureButton.setOnClickListener(this);
+        mBtnLight.setOnClickListener(this);
+        imgBtnAuto.setOnClickListener(this);
+    }
+
+
+    /*
+     * 方法名： initCamera()
+     * 功    能：初始化相机
+     * 参    数：
+     * 返回值：无
+     */
     private void initCamera() {
-
         executor = ContextCompat.getMainExecutor(this);
-
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider);
             } catch (ExecutionException | InterruptedException e) {
-                // No errors need to be handled for this Future.
-                // This should never be reached.
+
             }
         }, executor);
 
     }
 
+    /*
+     * 方法名： bindPreview()
+     * 功    能：绑定预览界面
+     * 参    数：
+     * 返回值：无
+     */
     private void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
         Preview preview = new Preview.Builder()
                 .build();
@@ -122,23 +176,22 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build();
-
         Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, mImageCapture, mImageAnalysis, preview);
-
         mCameraInfo = camera.getCameraInfo();
         mCameraControl = camera.getCameraControl();
-
         preview.setSurfaceProvider(mViewFinder.createSurfaceProvider(mCameraInfo));
-
         initCameraListener();
     }
 
+
+    /**
+     * 自定义对焦
+     */
     @SuppressLint("ClickableViewAccessibility")
     private void initCameraListener() {
         LiveData<ZoomState> zoomState = mCameraInfo.getZoomState();
         float maxZoomRatio = zoomState.getValue().getMaxZoomRatio();
         float minZoomRatio = zoomState.getValue().getMinZoomRatio();
-
         mViewFinder.setCustomTouchListener(new CameraXCustomPreviewView.CustomTouchListener() {
             @Override
             public void zoom() {
@@ -155,35 +208,16 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
                     mCameraControl.setZoomRatio((float) (zoomRatio - 0.1));
                 }
             }
-
+            //手动对焦
             @Override
             public void click(float x, float y) {
                 // TODO 对焦
-                MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(1.0f, 1.0f);
-                MeteringPoint point = factory.createPoint(x, y);
-                FocusMeteringAction action = new FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-                        // auto calling cancelFocusAndMetering in 3 seconds
-                        .setAutoCancelDuration(3, TimeUnit.SECONDS)
-                        .build();
-
-                mFocusView.startFocus(new Point((int) x, (int) y));
-                ListenableFuture future = mCameraControl.startFocusAndMetering(action);
-                future.addListener(() -> {
-                    try {
-                        FocusMeteringResult result = (FocusMeteringResult) future.get();
-                        if (result.isFocusSuccessful()) {
-                            mFocusView.onFocusSuccess();
-                        } else {
-                            mFocusView.onFocusFailed();
-                        }
-                    } catch (Exception e) {
-                    }
-                }, executor);
+                setFocusPosition(x,y);
             }
 
+            //双击放大
             @Override
             public void doubleClick(float x, float y) {
-                // 双击放大缩小
                 float zoomRatio = zoomState.getValue().getZoomRatio();
                 if (zoomRatio > minZoomRatio) {
                     mCameraControl.setLinearZoom(0f);
@@ -191,7 +225,6 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
                     mCameraControl.setLinearZoom(0.5f);
                 }
             }
-
             @Override
             public void longClick(float x, float y) {
 
@@ -214,9 +247,7 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         mImageAnalysis.setAnalyzer(executor, image -> {
             int rotationDegrees = image.getImageInfo().getRotationDegrees();
             ImageProxy.PlaneProxy[] planes = image.getPlanes();
-
             ByteBuffer buffer = planes[0].getBuffer();
-            // 转为byte[]
             // byte[] b = new byte[buffer.remaining()];
             // LogUtils.e(b);
             // TODO: 分析完成后关闭图像参考，否则会阻塞其他图像的产生
@@ -228,20 +259,17 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
      * 构建图像捕获用例
      */
     private void initImageCapture() {
-
         // 构建图像捕获用例
         mImageCapture = new ImageCapture.Builder()
                 .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .build();
-
         // 旋转监听
         OrientationEventListener orientationEventListener = new OrientationEventListener((Context) this) {
             @Override
             public void onOrientationChanged(int orientation) {
                 int rotation;
-
                 // Monitors orientation values to determine the target rotation value
                 if (orientation >= 45 && orientation < 135) {
                     rotation = Surface.ROTATION_270;
@@ -252,11 +280,9 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
                 } else {
                     rotation = Surface.ROTATION_0;
                 }
-
                 mImageCapture.setTargetRotation(rotation);
             }
         };
-
         orientationEventListener.enable();
     }
 
@@ -266,22 +292,45 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         return Camera2Config.defaultConfig();
     }
 
+    //设置对焦
+    private void setFocusPosition(float x,float y){
+        MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(1.0f, 1.0f);
+        MeteringPoint point = factory.createPoint(x, y);
+        FocusMeteringAction action = new FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                // auto calling cancelFocusAndMetering in 3 seconds
+                .setAutoCancelDuration(2, TimeUnit.SECONDS)
+                .build();
+
+        mFocusView.startFocus(new Point((int) x, (int) y));
+        ListenableFuture future = mCameraControl.startFocusAndMetering(action);
+        future.addListener(() -> {
+            try {
+                FocusMeteringResult result = (FocusMeteringResult) future.get();
+                if (result.isFocusSuccessful()) {
+                    mFocusView.onFocusSuccess();
+                } else {
+                    mFocusView.onFocusFailed();
+                }
+            } catch (Exception e) {
+            }
+        }, executor);
+    }
+    //保存图片
     public void saveImage() {
-        File file = new File(getExternalMediaDirs()[0], System.currentTimeMillis() + ".jpg");
-        ImageCapture.OutputFileOptions outputFileOptions =
-                new ImageCapture.OutputFileOptions.Builder(file).build();
+        //新建图片
+        File file = new File(getExternalMediaDirs()[0],System.currentTimeMillis() + ".jpg");
+        //从capture流保存图片
+        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
         mImageCapture.takePicture(outputFileOptions, executor,
                 new ImageCapture.OnImageSavedCallback() {
-
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                         String msg = "图片保存成功: " + file.getAbsolutePath();
-//                        showMsg(msg);
+                        Log.i("CameraxTestActivity",msg);
                         Uri contentUri = Uri.fromFile(new File(file.getAbsolutePath()));
                         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, contentUri);
                         sendBroadcast(mediaScanIntent);
                     }
-
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
                         String msg = "图片保存失败: " + exception.getMessage();
@@ -290,11 +339,14 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         );
     }
 
+    //按钮点击
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.capture_button:
+                Log.i("CameraxTestActivty","take pic");
                 saveImage();
+                Log.i("CameraxTestActivty","stop auto take");
                 break;
             case R.id.btn_light:
                 switch (mImageCapture.getFlashMode()) {
@@ -312,6 +364,24 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
                         break;
                 }
                 break;
+            case R.id.btnAutoTake:
+                handler.post(runnableAuto);
+                Log.i("CameraxTestActivty","auto take");
+                break;
         }
     }
+
+    //消息队列,用于终止连拍
+    final Handler handlerStop = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1:
+                    count = 0;
+                    handler.removeCallbacks(runnableAuto);
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+
 }

@@ -4,15 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -28,6 +23,7 @@ public class GrayTestActivity  extends AppCompatActivity implements View.OnClick
     private Button btn2Gray;
     private static boolean flag = true;
     private static final String TAG = "GrayTest";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
