@@ -69,8 +69,8 @@ public interface Classifier {
     }
 
     // 调用 分类器 进行识别
-    List<Recognition> recognizeImage(Bitmap bitmap);
-
+//    List<Recognition> recognizeImage(Bitmap bitmap);
+    float[][] recognizeImage(Bitmap bitmap);
     // 释放 分类器 资源
     void close();
 }

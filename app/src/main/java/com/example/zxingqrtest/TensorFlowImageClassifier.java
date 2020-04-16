@@ -72,6 +72,14 @@ public class TensorFlowImageClassifier implements Classifier {
         return labelList;
     }
 
+    @Override
+    public float[][] recognizeImage(Bitmap bitmap) {
+        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+            float [][] result = new float[1][labelList.size()];
+            interpreter.run(byteBuffer, result);
+            return result;
+    }
+
     // 释放 tf解释器 资源
     @Override
     public void close() {
@@ -80,20 +88,22 @@ public class TensorFlowImageClassifier implements Classifier {
     }
 
     // 调用 分类器 进行识别，返回识别结果
-    @Override// 重写父类方法
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
-        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-        if(quart){
-            byte[][] result = new byte[1][labelList.size()];
-            interpreter.run(byteBuffer, result);
-            return getSortedResultByte(result);
-        } else {
-            float [][] result = new float[1][labelList.size()];
-            interpreter.run(byteBuffer, result);
-            return getSortedResultFloat(result);
-        }
+//    @Override// 重写父类方法
+//    public List<Recognition> recognizeImage(Bitmap bitmap) {
+//        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+//        if(quart){
+//            byte[][] result = new byte[1][labelList.size()];
+//            interpreter.run(byteBuffer, result);
+//            return getSortedResultByte(result);
+//        } else {
+//            float [][] result = new float[1][labelList.size()];
+//            interpreter.run(byteBuffer, result);
+//            return getSortedResultFloat(result);
+//        }
+//    }
 
-    }
+
+
 
     // 输入数据转换
     private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
