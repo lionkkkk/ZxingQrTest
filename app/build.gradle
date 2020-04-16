@@ -45,6 +45,7 @@ android {
 
     aaptOptions {
         noCompress "tflite"  //表示不让aapt压缩的文件后缀
+        noCompress "lite"
     }
 }
 
