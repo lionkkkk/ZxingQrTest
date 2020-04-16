@@ -68,4 +68,6 @@ dependencies {
     //滑动显示图片所需依赖
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
 
+    implementation 'org.tensorflow:tensorflow-lite:+'
+
 }

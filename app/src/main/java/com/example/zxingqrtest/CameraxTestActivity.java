@@ -39,13 +39,13 @@ import androidx.camera.core.ZoomState;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
-
 import com.google.common.util.concurrent.ListenableFuture;
 import com.example.zxingqrtest.view.CameraXCustomPreviewView;
 import com.example.zxingqrtest.view.FocusImageView;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +76,8 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
     private int count =0 ;
     private float posX[]={250,850,250,850,550};
     private float posY[]={600,600,1400,1400,1000};  //自定义对焦坐标
-
+    private boolean autoTakeFlag = false;
+    private ArrayList<String> strListPicPath = new ArrayList<String>(); //用于存放自动拍照地5张图片的URI
     //自动拍照
     Handler handler=new Handler();
     Runnable runnableAuto = new Runnable() {
@@ -366,6 +367,7 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
                 break;
             case R.id.btnAutoTake:
                 handler.post(runnableAuto);
+                autoTakeFlag=true;
                 Log.i("CameraxTestActivty","auto take");
                 break;
         }

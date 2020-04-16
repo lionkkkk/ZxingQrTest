@@ -29,7 +29,9 @@ import com.example.zxingqrtest.Utils.DecoderUtil;
 import com.example.zxingqrtest.Utils.RealPathFromUriUtils;
 import com.google.zxing.Result;
 import java.util.Arrays;
-
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -45,12 +47,23 @@ public class MainActivity extends AppCompatActivity {
     private Result result;
     private TextView tv_result;
     private String loadPicPath;
+
+    //tensorflow相关
+    private Classifier classifier; //tf分类器实例
+    //private static final String MODEL_PATH = "mobileNetV2_0.25_32.tflite"; //tf模型文件
+    private static final String MODEL_PATH = "assets://mobileNetV2_0.25_32_quant.tflite"; //tf模型文件
+    private static final String LABEL_PATH = "assets://labels.txt"; //标签文件，在assert文件夹中
+    private static final int INPUT_SIZE = 32; //输入图片尺寸
+    private static final boolean QUANT = false; //是否为量化版tfModel
+    private Executor executor = Executors.newSingleThreadExecutor();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
 
+        //
+        initTensorFlowAndLoadModel();
 
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,6 +113,24 @@ public class MainActivity extends AppCompatActivity {
         btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
         btnDetect = findViewById(R.id.btnDetect);          //识别加载的图片
         btnCvTest = findViewById(R.id.btnCVTest);
+    }
+
+    private void initTensorFlowAndLoadModel() {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    classifier = TensorFlowImageClassifier.create(
+                            getAssets(),
+                            MODEL_PATH,
+                            LABEL_PATH,
+                            INPUT_SIZE,
+                            QUANT);
+                } catch (final Exception e) {
+                    throw new RuntimeException("Error initializing TensorFlow!", e);
+                }
+            }
+        });
     }
 
     /*
@@ -186,15 +217,20 @@ public class MainActivity extends AppCompatActivity {
      */
     public void showImg(String path){
         Log.i("MainActivity",path);
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 2;
-        Bitmap bm = BitmapFactory.decodeFile(path, options);
-        Log.i("MainActivity", "压缩后图片的大小" + (bm.getByteCount() / 1024 / 1024)
-                + "M宽度为" + bm.getWidth() + "高度为" + bm.getHeight());
+        //压缩测试
+//        BitmapFactory.Options options = new BitmapFactory.Options();
+//        options.inSampleSize = 2;
+//        Bitmap bm = BitmapFactory.decodeFile(path, options);
+//        Log.i("MainActivity", "压缩后图片的大小" + (bm.getByteCount() / 1024 / 1024)
+//                + "M宽度为" + bm.getWidth() + "高度为" + bm.getHeight());
+        Bitmap bm = BitmapFactory.decodeFile(path);
         mShowImg.setImageBitmap(bm);
+        final List<Classifier.Recognition> results = classifier.recognizeImage(bm);
+//        textViewResult.setText(results.toString());
         try {
             result = DecoderUtil.decodeQR(bm);
-            tv_result.setText("Result:"+result.getText());
+//            tv_result.setText("Result:"+result.getText());
+            tv_result.setText("Result:"+result.getText()+" tflite:"+results.toString());
         } catch (Exception e) {
             Log.w("MainActivity", "Cannot detect" , e);
             tv_result.setText("Can't detect");
