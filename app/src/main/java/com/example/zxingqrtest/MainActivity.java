@@ -51,18 +51,19 @@ public class MainActivity extends AppCompatActivity {
     //tensorflow相关
     private Classifier classifier; //tf分类器实例
     //private static final String MODEL_PATH = "mobileNetV2_0.25_32.tflite"; //tf模型文件
-    private static final String MODEL_PATH = "assets://mobileNetV2_0.25_32_quant.tflite"; //tf模型文件
-    private static final String LABEL_PATH = "assets://labels.txt"; //标签文件，在assert文件夹中
+    private static final String MODEL_PATH = "mobileNetV2_0.25_32_quant.tflite"; //tf模型文件
+    private static final String LABEL_PATH = "labels.txt"; //标签文件，在assert文件夹中
     private static final int INPUT_SIZE = 32; //输入图片尺寸
     private static final boolean QUANT = false; //是否为量化版tfModel
     private Executor executor = Executors.newSingleThreadExecutor();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
 
-        //
+        //加载tf模型
         initTensorFlowAndLoadModel();
 
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {

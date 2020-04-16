@@ -42,6 +42,10 @@ android {
             version "3.10.2"
         }
     }
+
+    aaptOptions {
+        noCompress "tflite"  //表示不让aapt压缩的文件后缀
+    }
 }
 
 dependencies {
@@ -68,6 +72,7 @@ dependencies {
     //滑动显示图片所需依赖
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
 
+    compile 'org.tensorflow:tensorflow-lite:+'
     implementation 'org.tensorflow:tensorflow-lite:+'
 
 }
