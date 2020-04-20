@@ -87,9 +87,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-//                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
-//                    result = DecoderUtil.decodeQR(bitmap);
-//                    tv_result.setText("Result:"+result.getText());
+                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
+                    result=DecoderUtil.decodeQR(bitmap);
+                    tv_result.setText("Result:"+result.getText());
                 } catch (Exception e) {
 
                 }
@@ -106,12 +106,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /*
-     * 方法名： initView()
-     * 功    能：初始化各种控件
-     * 参    数：
-     * 返回值：无
-     */
+    //初始化各种控件
     private void initView(){
         mShowImg = (ImageView) findViewById(R.id.imageView);       //图片视图
         tv_result = findViewById(R.id.tv_result);                  //识别结果tv
@@ -120,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         btnCvTest = findViewById(R.id.btnCVTest);
     }
 
+    //初始化tensorflow模型加载
     private void initTensorFlowAndLoadModel() {
         executor.execute(new Runnable() {
             @Override
@@ -186,13 +182,9 @@ public class MainActivity extends AppCompatActivity {
             switch (requestCode) {
                 case REQUEST_PICK_IMAGE:
                     if (data != null) {
-                        loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
-                        cutPic2Pieces(loadPicPath);    //切割图片
-                        for(int i=0;i<bmList.size();i++)
-                        {
-                            String output=tensorProcess( bmList.get(i));
-                            Log.i("test",output);
-                        }
+                        loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData()); //存放打开的图片的路径
+                        Bitmap bm = BitmapFactory.decodeFile(loadPicPath);
+                        mShowImg.setImageBitmap(bm);
 
                     } else {
                         Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
@@ -210,22 +202,8 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(MainActivity.this, mPermissionList, 100);
     }
 
-    /*
-     * 方法名： showImg(String path)
-     * 功    能：显示图片到界面
-     */
-    private void showImg(String path){
-        Bitmap bm = BitmapFactory.decodeFile(path);
-        mShowImg.setImageBitmap(bm);
-//        long startTime = System.currentTimeMillis(); //起始时间
-//       String output = tensorProcess(bitmap);
-//       tv_result.setText(output.toString());
-//        long endTime = System.currentTimeMillis(); //结束时间
-//        long runTime = endTime - startTime;
-//        Log.i("test", String.format("方法使用时间 %d ms", runTime));
-    }
 
-    //测试tensorflow接口调用
+    //测试tensorflow接口
     private String tensorProcess(Bitmap bm){
         Bitmap bitmap = Bitmap.createScaledBitmap(bm, INPUT_SIZE, INPUT_SIZE, false); //降低采样率
         final float results[][]=classifier.recognizeImage(bitmap);
@@ -248,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
         Utils.bitmapToMat(bm, m);
         for(int i=0;i<bm.getWidth();i+=bm.getWidth()/3)
             for(int j=0;j<bm.getHeight();j+=bm.getHeight()/3){
-                Mat r = reSizeMat(m,i,j,200,200);
+                Mat r = reSizeMat(m,i,j,bm.getWidth()/3,bm.getWidth()/3);
                 Bitmap b = Bitmap.createBitmap(r.cols(), r.rows(),
                         Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(r, b);

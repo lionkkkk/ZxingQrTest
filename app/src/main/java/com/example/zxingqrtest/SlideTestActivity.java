@@ -24,8 +24,8 @@ public class SlideTestActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slide_test);
-        mSlideImageView = (SlideImageView) findViewById(R.id.main_siv);
 
+        mSlideImageView = (SlideImageView) findViewById(R.id.main_siv);
         ImageLoaderConfiguration configuration = ImageLoaderConfiguration
                 .createDefault(this);
         ImageLoader.getInstance().init(configuration);

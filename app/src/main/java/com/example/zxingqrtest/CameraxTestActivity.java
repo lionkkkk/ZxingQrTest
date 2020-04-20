@@ -346,7 +346,7 @@ public class CameraxTestActivity  extends AppCompatActivity implements CameraXCo
         switch (view.getId()) {
             case R.id.capture_button:
                 Log.i("CameraxTestActivty","take pic");
-                saveImage();
+                saveImage();//保存图片
                 Log.i("CameraxTestActivty","stop auto take");
                 break;
             case R.id.btn_light:
