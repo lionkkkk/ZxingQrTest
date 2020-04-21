@@ -10,8 +10,11 @@ import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.common.GlobalHistogramBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
 
-public class DecoderUtil {
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
+public class DecoderUtil {
     /**
      * 解析二维码图片
      *
@@ -42,4 +45,19 @@ public class DecoderUtil {
         }
         return result;
     }
+
+    public static Bitmap procSrc2Gray(Bitmap srcBitmap){
+        Mat rgbMat = new Mat();
+        Mat grayMat = new Mat();
+        Mat binaMat = new Mat();
+        Bitmap grayBitmap = Bitmap.createBitmap(srcBitmap.getWidth(), srcBitmap.getHeight(), Bitmap.Config.RGB_565);
+        Utils.bitmapToMat(srcBitmap, rgbMat);//convert original bitmap to Mat, R G B.
+        Imgproc.cvtColor(rgbMat, grayMat, Imgproc.COLOR_RGB2GRAY);//rgbMat to gray grayMat
+        Imgproc.adaptiveThreshold(grayMat,binaMat,255,Imgproc.ADAPTIVE_THRESH_MEAN_C,Imgproc.THRESH_BINARY,11,1);
+        Utils.matToBitmap(binaMat, grayBitmap); //convert mat to bitmap
+        return grayBitmap;
+    }
+
+
+
 }

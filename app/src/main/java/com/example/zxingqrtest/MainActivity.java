@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private Result result;
     private TextView tv_result;
     private String loadPicPath;
-
+    private static final String TAG = "Main";
     //tensorflow相关
     private Classifier classifier; //tf分类器实例
     //private static final String MODEL_PATH = "mobileNetV2_0.25_32.tflite"; //tf模型文件
@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();//初始化UI
         initTensorFlowAndLoadModel();   //加载tensorflow模型
-
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -90,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
                     Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
                     result=DecoderUtil.decodeQR(bitmap);
                     tv_result.setText("Result:"+result.getText());
+                    Bitmap grayTest=DecoderUtil.procSrc2Gray(bitmap);
+                    mShowImg.setImageBitmap(grayTest);
                 } catch (Exception e) {
 
                 }
@@ -242,28 +243,34 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    //openCV4Android 需要加载用到
+    //OpenCV库加载并初始化成功后的回调函数
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                }
-                break;
-                default: {
+            // TODO Auto-generated method stub
+            switch (status){
+                case BaseLoaderCallback.SUCCESS:
+                    Log.i(TAG, "成功加载");
+                    break;
+                default:
                     super.onManagerConnected(status);
-                }
-                break;
+                    Log.i(TAG, "加载失败");
+                    break;
             }
         }
     };
+
     @Override
-    protected void onResume() {
+    public void onResume()
+    {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, mLoaderCallback);
         } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
+
 }
