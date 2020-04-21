@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.example.zxingqrtest.Utils.DecoderUtil;
+import com.example.zxingqrtest.Utils.PicProcessUtil;
 import com.example.zxingqrtest.Utils.RealPathFromUriUtils;
 import com.google.zxing.Result;
 
@@ -41,6 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import static com.example.zxingqrtest.Utils.PicProcessUtil.procSrc2Gray;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -73,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();//初始化UI
         initTensorFlowAndLoadModel();   //加载tensorflow模型
+        //启动相机
         btnOpenCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //识别按钮点击事件
         btnDetect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                     Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
                     result=DecoderUtil.decodeQR(bitmap);
                     tv_result.setText("Result:"+result.getText());
-                    Bitmap grayTest=DecoderUtil.procSrc2Gray(bitmap);
+                    Bitmap grayTest= PicProcessUtil.procSrc2Gray(bitmap);
                     mShowImg.setImageBitmap(grayTest);
                 } catch (Exception e) {
 
@@ -97,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //图片滑动显示
         btnCvTest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -220,28 +226,6 @@ public class MainActivity extends AppCompatActivity {
         return output;
     }
 
-  //切割图片
-    private void cutPic2Pieces(String path){
-        Mat m = new Mat();
-        Bitmap bm = BitmapFactory.decodeFile(path);
-        Utils.bitmapToMat(bm, m);
-        for(int i=0;i<bm.getWidth();i+=bm.getWidth()/3)
-            for(int j=0;j<bm.getHeight();j+=bm.getHeight()/3){
-                Mat r = reSizeMat(m,i,j,bm.getWidth()/3,bm.getWidth()/3);
-                Bitmap b = Bitmap.createBitmap(r.cols(), r.rows(),
-                        Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(r, b);
-                if(bmList.add(b))
-                    Log.i("test",i+","+j);
-            }
-    }
-
-    //根据坐标和宽高切割图片
-    private Mat reSizeMat(Mat src,int x,int y,int width, int height){
-        Rect rect=new Rect(x,y,width,height);
-        Mat result=new Mat(src,rect);
-        return result;
-    }
 
     //OpenCV库加载并初始化成功后的回调函数
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -259,7 +243,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
     @Override
     public void onResume()
     {

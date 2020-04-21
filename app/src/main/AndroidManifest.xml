@@ -15,10 +15,6 @@
         android:theme="@style/AppTheme">
         <activity android:name=".SlideTestActivity" />
         <activity android:name=".CameraxTestActivity" />
-        <activity
-            android:name=".GrayTestActivity"
-            android:label="@string/title_activity_gray_test"
-            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
