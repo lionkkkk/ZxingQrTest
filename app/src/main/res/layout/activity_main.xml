@@ -6,7 +6,7 @@
         android:id="@+id/btnAlbum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
+        android:layout_marginStart="2dp"
         android:layout_marginTop="16dp"
         android:onClick="openAlbum"
         android:text="图库加载"
@@ -17,14 +17,14 @@
         android:id="@+id/btnDetect"
         android:text="识别条码"
         android:layout_marginTop="16dp"
-        android:layout_marginStart="100dp"
+        android:layout_marginStart="85dp"
         />
 
     <Button
         android:id="@+id/btnCVTest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="195dp"
+        android:layout_marginStart="168dp"
         android:layout_marginTop="16dp"
         android:text="验证CV"/>
 
@@ -32,7 +32,7 @@
         android:id="@+id/btnOpenCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="290dp"
+        android:layout_marginStart="251dp"
         android:layout_marginTop="16dp"
         android:text="相机扫描"/>
 
@@ -49,7 +49,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tv_result"
-        android:layout_marginTop="650dp"
+        android:layout_marginTop="400dp"
         android:text="Result:"
         />
 
