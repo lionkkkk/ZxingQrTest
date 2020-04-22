@@ -31,6 +31,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+//        debug {
+//            debuggable true            //打开调试
+//            testCoverageEnabled false
+//        }
     }
     compileOptions {
         sourceCompatibility = '1.8'

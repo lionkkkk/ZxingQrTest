@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.example.zxingqrtest.Utils.PicProcessUtil.procSrc2Gray;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -69,6 +68,27 @@ public class MainActivity extends AppCompatActivity {
     private static final boolean QUANT = false; //是否为量化版tfModel
     private Executor executor = Executors.newSingleThreadExecutor();
     private ArrayList<Bitmap> bmList=new ArrayList<Bitmap>();
+    private boolean[][] imgMat=new boolean[][]{{true,true,true,true,true,true,true,false,false,true,true,true,true,false,true,true,true,true,true,true,true},
+            {true,false,false,false,false,false,true,false,false,true,false,true,false,false,true,false,false,false,false,false,true},
+            {true,false,true,true,true,false,true,false,false,true,false,false,false,false,true,false,true,true,true,false,true},
+            {true,false,true,true,true,false,true,false,true,true,true,true,false,false,true,false,true,true,true,false,true},
+            {true,false,true,true,true,false,true,false,true,false,true,true,true,false,true,false,true,true,true,false,true},
+            {true,false,false,false,false,false,true,false,false,false,true,false,true,false,true,false,false,false,false,false,true},
+            {true,true,true,true,true,true,true,false,true,false,true,false,true,false,true,true,true,true,true,true,true},
+            {false,false,false,false,false,false,false,false,false,true,true,true,true,false,false,false,false,false,false,false,false},
+            {true,true,false,false,false,true,true,true,false,true,false,false,true,false,false,false,true,true,false,false,false},
+            {false,false,false,true,false,false,false,false,false,false,false,false,true,false,true,false,true,true,true,true,false},
+            {false,true,true,false,false,true,true,true,true,true,true,true,false,true,false,false,true,true,false,false,true},
+            {true,true,false,false,true,true,false,true,true,true,false,false,false,false,false,false,true,false,true,true,true},
+            {false,false,false,false,false,true,true,true,true,false,false,false,false,false,true,false,false,true,false,false,true},
+            {false,false,false,false,false,false,false,false,true,true,false,true,true,true,true,false,false,false,true,false,false},
+            {true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,true,false,true,false,false,false},
+            {true,false,false,false,false,false,true,false,true,false,false,true,true,true,false,false,true,false,true,true,false},
+            {true,false,true,true,true,false,true,false,false,false,true,false,true,false,false,true,false,true,true,false,false},
+            {true,false,true,true,true,false,true,false,false,true,false,false,true,false,false,false,false,true,true,false,false},
+            {true,false,true,true,true,false,true,false,false,true,true,false,false,false,true,true,true,false,true,true,true},
+            {true,false,false,false,false,false,true,false,true,false,false,false,false,false,false,true,true,false,true,true,false},
+            {true,true,true,true,true,true,true,false,true,true,true,true,false,true,false,true,false,false,true,false,false}};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,11 +111,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
+//                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
+//                    Bitmap grayTest= PicProcessUtil.procSrc2Gray(bitmap);
+//                    mShowImg.setImageBitmap(grayTest);                     //灰度处理并显示出来
+//                    result=DecoderUtil.decodeQR(bitmap);
+//                    tv_result.setText("Result:"+result);
+//                    if(res==null)
+//                        tv_result.setText("Result:NULL");
+
+//                    String res=DecoderUtil.decodeFromBits(imgMat);        //直接根据输入的矩阵进行识别
+//                    Log.i(TAG,res);
+
                     Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
-                    result=DecoderUtil.decodeQR(bitmap);
-                    tv_result.setText("Result:"+result.getText());
-                    Bitmap grayTest= PicProcessUtil.procSrc2Gray(bitmap);
-                    mShowImg.setImageBitmap(grayTest);
+                    Bitmap images = PicProcessUtil.BatchQRcodeDetect(bitmap);
+                    mShowImg.setImageBitmap(images);
+
                 } catch (Exception e) {
 
                 }
