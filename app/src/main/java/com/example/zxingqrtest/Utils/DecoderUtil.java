@@ -50,20 +50,6 @@ public class DecoderUtil {
         return result;
     }
 
-//    public static String  getResultByte(Bitmap srcBitmap) throws NotFoundException {
-//        BinaryBitmap binaryBitmap=null;
-//        if (srcBitmap != null) {
-//            int width = srcBitmap.getWidth();
-//            int height = srcBitmap.getHeight();
-//            int[] pixels = new int[width * height];
-//            srcBitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-//            // 新建一个RGBLuminanceSource对象
-//            RGBLuminanceSource source = new RGBLuminanceSource(width, height, pixels);
-//            binaryBitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
-//        }
-//        return binaryBitmap.;
-//
-//    }
 
     public static String decodeFromBits(boolean[][] imageMat) {
         Decoder decoder = new Decoder();
