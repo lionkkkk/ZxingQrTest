@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="168dp"
         android:layout_marginTop="16dp"
-        android:text="验证CV"/>
+        android:text="批量测试"/>
 
     <Button
         android:id="@+id/btnOpenCamera"

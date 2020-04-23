@@ -28,14 +28,13 @@ import androidx.core.app.ActivityCompat;
 import com.example.zxingqrtest.Utils.DecoderUtil;
 import com.example.zxingqrtest.Utils.PicProcessUtil;
 import com.example.zxingqrtest.Utils.RealPathFromUriUtils;
+import com.example.zxingqrtest.deeplearning.Classifier;
+import com.example.zxingqrtest.deeplearning.TensorFlowImageClassifier;
 import com.google.zxing.Result;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,13 +60,16 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Main";
     //tensorflow相关
     private Classifier classifier; //tf分类器实例
-    //private static final String MODEL_PATH = "mobileNetV2_0.25_32.tflite"; //tf模型文件
     private static final String MODEL_PATH = "mobileNetV2_0.25_32_quant.tflite"; //tf模型文件
     private static final String LABEL_PATH = "labels.txt"; //标签文件，在assert文件夹中
     private static final int INPUT_SIZE = 32; //输入图片尺寸
     private static final boolean QUANT = false; //是否为量化版tfModel
     private Executor executor = Executors.newSingleThreadExecutor();
-    private ArrayList<Bitmap> bmList=new ArrayList<Bitmap>();
+    private String[] detectUrl = new String[]{"/storage/emulated/0/tencent/MicroMsg/WeiXin/mmexport1586677396375.jpg",
+            "/storage/emulated/0/tencent/MicroMsg/WeiXin/mmexport1587016136817.jpg"
+       };
+
+    //二维码矩阵测试数据
     private boolean[][] imgMat=new boolean[][]{{true,true,true,true,true,true,true,false,false,true,true,true,true,false,true,true,true,true,true,true,true},
             {true,false,false,false,false,false,true,false,false,true,false,true,false,false,true,false,false,false,false,false,true},
             {true,false,true,true,true,false,true,false,false,true,false,false,false,false,true,false,true,true,true,false,true},
@@ -111,20 +113,29 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-//                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
-//                    Bitmap grayTest= PicProcessUtil.procSrc2Gray(bitmap);
-//                    mShowImg.setImageBitmap(grayTest);                     //灰度处理并显示出来
-//                    result=DecoderUtil.decodeQR(bitmap);
-//                    tv_result.setText("Result:"+result);
-//                    if(res==null)
-//                        tv_result.setText("Result:NULL");
+//                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);
+//                    result= DecoderUtil.decodeQR(bitmap);
+//                    tv_result.setText("Result:"+result.getText());
+                      String [] results=new String[2];
+                      for(int i=0;i<detectUrl.length;i++){
+                          Bitmap bitmap = BitmapFactory.decodeFile(detectUrl[i]);
+                          results[i]=DecoderUtil.decodeQR(bitmap).getText();
+                      }
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this, ListActivity.class);
+                    Bundle bd=new Bundle();
+                    bd.putStringArray("urlArray",detectUrl);
+                    bd.putStringArray("resultsArray",results);   //把数据传给ListActivity
+                    intent.putExtras(bd);
+                    startActivity(intent);
+
 
 //                    String res=DecoderUtil.decodeFromBits(imgMat);        //直接根据输入的矩阵进行识别
 //                    Log.i(TAG,res);
 
-                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //保存加载图片的路径
-                    Bitmap images = PicProcessUtil.BatchQRcodeDetect(bitmap);
-                    mShowImg.setImageBitmap(images);
+//                    Bitmap bitmap = BitmapFactory.decodeFile(loadPicPath);  //测试定位截取
+//                    Bitmap images = PicProcessUtil.BatchQRcodeDetect(bitmap);
+//                    mShowImg.setImageBitmap(images);
 
                 } catch (Exception e) {
 
@@ -137,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(MainActivity.this, SlideTestActivity.class);
+                intent.setClass(MainActivity.this, ThreadActivity.class);
                 startActivity(intent);
             }
         });
@@ -220,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
                 case REQUEST_PICK_IMAGE:
                     if (data != null) {
                         loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData()); //存放打开的图片的路径
+                        Log.i(TAG,loadPicPath);
                         Bitmap bm = BitmapFactory.decodeFile(loadPicPath);
                         mShowImg.setImageBitmap(bm);
 

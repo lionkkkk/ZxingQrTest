@@ -1,4 +1,4 @@
-package com.example.zxingqrtest;
+package com.example.zxingqrtest.deeplearning;
 
 import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
@@ -35,11 +35,11 @@ public class TensorFlowImageClassifier implements Classifier {
     private boolean quart;                          //是否为量化版本
 
     // 生成分类器
-    static Classifier create(AssetManager assetManager,
-                             String modelPath,
-                             String labelPath,
-                             int inputSize,
-                             boolean quant) throws IOException {
+    public static Classifier create(AssetManager assetManager,
+                                    String modelPath,
+                                    String labelPath,
+                                    int inputSize,
+                                    boolean quant) throws IOException {
         TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
         classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, modelPath), new Interpreter.Options());
         classifier.labelList = classifier.loadLabelList(assetManager, labelPath);

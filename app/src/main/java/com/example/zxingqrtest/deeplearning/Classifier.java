@@ -1,4 +1,4 @@
-package com.example.zxingqrtest;
+package com.example.zxingqrtest.deeplearning;
 
 import android.graphics.Bitmap;
 
