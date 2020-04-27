@@ -3,6 +3,7 @@ package com.example.zxingqrtest.deeplearning;
 import android.graphics.Bitmap;
 
 import java.util.List;
+import java.util.Vector;
 
 /*分类器模型 基类*/
 public interface Classifier {
@@ -68,9 +69,17 @@ public interface Classifier {
         }
     }
 
+
+
+
     // 调用 分类器 进行识别
-//    List<Recognition> recognizeImage(Bitmap bitmap);
-    float[][] recognizeImage(Bitmap bitmap);
+    public float[][] My_recognizeImage(Vector<Bitmap> images);
+    List<Recognition> recognizeImage0(Bitmap bitmap);
+    float[][] recognizeImage1(Bitmap bitmap);
+
+
+
+
     // 释放 分类器 资源
     void close();
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ZxingQrTest</string>
+    <string name="app_name">BatchQRcodes v1.0</string>
     <string name="title_activity_gray_test">GrayTestActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

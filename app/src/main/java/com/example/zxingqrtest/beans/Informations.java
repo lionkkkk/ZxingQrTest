@@ -1,7 +1,10 @@
 package com.example.zxingqrtest.beans;
 
+import android.graphics.Bitmap;
+
 public class Informations {
     private String picUrl;
+    private Bitmap bm;
     private String content;
 
     public Informations() {}
@@ -11,9 +14,15 @@ public class Informations {
         this.content = content;
     }
 
+    public Informations(Bitmap bm, String content) {
+        this.bm = bm;
+        this.content = content;
+    }
+
     public String getPicUrl() {
         return picUrl;
     }
+    public Bitmap getBm(){return bm;}
 
     public String getContent() {
         return content;

@@ -54,7 +54,6 @@ public class DecoderUtil {
     public static String decodeFromBits(boolean[][] imageMat) {
         Decoder decoder = new Decoder();
         String res="can't detect";
-
         try {
             res = decoder.decode(imageMat, CodeHints.getDefaultDecodeHints()).getText();// 开始解析
         }  catch (ChecksumException e) {

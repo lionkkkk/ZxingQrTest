@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.util.Log;
 
+import org.opencv.android.Utils;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
@@ -17,14 +19,19 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
+
+import java.util.Vector;
+import java.lang.Math;
 
 // 分类器_基类 具体实现
 public class TensorFlowImageClassifier implements Classifier {
 
     private static final int MAX_RESULTS = 1;       //识别类别最多的个数
-    private static final int BATCH_SIZE = 1;        //批量检测数量
+    private static int BATCH_SIZE = 1;              //批量检测数量
     private static final int PIXEL_SIZE = 3;        //通道数
     private static final float THRESHOLD = 0.1f;    //阈值
     private static final int IMAGE_MEAN = 128;
@@ -47,7 +54,12 @@ public class TensorFlowImageClassifier implements Classifier {
         classifier.quart = quant;
         return classifier;
     }
-
+    // 释放 tf解释器 资源
+    @Override
+    public void close() {
+        interpreter.close();
+        interpreter = null;
+    }
     // 加载模型文件
     private MappedByteBuffer loadModelFile(AssetManager assetManager,
                                            String modelPath) throws IOException {
@@ -58,7 +70,6 @@ public class TensorFlowImageClassifier implements Classifier {
         long declaredLength = fileDescriptor.getDeclaredLength();
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
-
     // 加载标签文件
     private List<String> loadLabelList(AssetManager assetManager,
                                        String labelPath) throws IOException {
@@ -71,50 +82,37 @@ public class TensorFlowImageClassifier implements Classifier {
         reader.close();
         return labelList;
     }
-
+    // 调用 分类器 进行识别，返回识别结果
     @Override
-    public float[][] recognizeImage(Bitmap bitmap) {
+    public float[][] recognizeImage1(Bitmap bitmap) {
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+        interpreter.resizeInput(0, new int[]{1,inputSize,inputSize,PIXEL_SIZE});
+        float [][] result = new float[1][labelList.size()];
+        interpreter.run(byteBuffer, result);
+        return result;
+    }
+    @Override
+    public List<Recognition> recognizeImage0(Bitmap bitmap) {
+        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+        interpreter.resizeInput(0, new int[]{1,inputSize,inputSize,PIXEL_SIZE});
+        if(quart){
+            byte[][] result = new byte[1][labelList.size()];
+            interpreter.run(byteBuffer, result);
+            return getSortedResultByte(result);
+        } else {
             float [][] result = new float[1][labelList.size()];
             interpreter.run(byteBuffer, result);
-            return result;
+            return getSortedResultFloat(result);
+        }
     }
-
-    // 释放 tf解释器 资源
-    @Override
-    public void close() {
-        interpreter.close();
-        interpreter = null;
-    }
-
-    // 调用 分类器 进行识别，返回识别结果
-//    @Override// 重写父类方法
-//    public List<Recognition> recognizeImage(Bitmap bitmap) {
-//        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-//        if(quart){
-//            byte[][] result = new byte[1][labelList.size()];
-//            interpreter.run(byteBuffer, result);
-//            return getSortedResultByte(result);
-//        } else {
-//            float [][] result = new float[1][labelList.size()];
-//            interpreter.run(byteBuffer, result);
-//            return getSortedResultFloat(result);
-//        }
-//    }
-
-
-
-
     // 输入数据转换
     private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
         ByteBuffer byteBuffer;
-
         if(quart) {
-            byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * inputSize * inputSize * PIXEL_SIZE);
+            byteBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * PIXEL_SIZE);
         } else {
-            byteBuffer = ByteBuffer.allocateDirect(4 * BATCH_SIZE * inputSize * inputSize * PIXEL_SIZE);
+            byteBuffer = ByteBuffer.allocateDirect(4 * 1 * inputSize * inputSize * PIXEL_SIZE);
         }
-
         byteBuffer.order(ByteOrder.nativeOrder());
         int[] intValues = new int[inputSize * inputSize];
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
@@ -136,7 +134,6 @@ public class TensorFlowImageClassifier implements Classifier {
         }
         return byteBuffer;
     }
-
     // 输出结果转换_quart版
     @SuppressLint("DefaultLocale")// 忽略警告
     private List<Recognition> getSortedResultByte(byte[][] labelProbArray) {
@@ -168,7 +165,6 @@ public class TensorFlowImageClassifier implements Classifier {
 
         return recognitions;
     }
-
     // 输出结果转换_float版
     @SuppressLint("DefaultLocale")
     private List<Recognition> getSortedResultFloat(float[][] labelProbArray) {
@@ -199,6 +195,57 @@ public class TensorFlowImageClassifier implements Classifier {
         }
 
         return recognitions;
+    }
+
+
+
+
+
+
+
+    // 成批图片 识别
+    @Override
+    public float[][] My_recognizeImage(Vector<Bitmap> images) {
+        ByteBuffer byteBuffer = My_convertBitmapToByteBuffer(images);
+        interpreter.resizeInput(0, new int[]{BATCH_SIZE,inputSize,inputSize,PIXEL_SIZE});
+        float[][] result = new float[BATCH_SIZE][labelList.size()];
+        interpreter.run(byteBuffer, result);
+        BATCH_SIZE = 1;
+        return result;
+    }
+    // 成批图片 输入数据转换
+    private ByteBuffer My_convertBitmapToByteBuffer(Vector<Bitmap> images) {
+        BATCH_SIZE = images.size();
+        ByteBuffer byteBuffer;
+        if(quart) {
+            byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * inputSize * inputSize * PIXEL_SIZE);
+        } else {
+            byteBuffer = ByteBuffer.allocateDirect(4 * BATCH_SIZE * inputSize * inputSize * PIXEL_SIZE);
+        }
+        byteBuffer.order(ByteOrder.nativeOrder());
+        for(int m=0; m<BATCH_SIZE; m++){
+            Bitmap bitmap = Bitmap.createScaledBitmap(images.get(m),inputSize,inputSize,true);
+            int[] intValues = new int[inputSize * inputSize];
+            bitmap.getPixels(intValues,0,bitmap.getWidth(),
+                    0,0,bitmap.getWidth(),bitmap.getHeight());
+            int pixel = 0;
+            for (int i = 0; i < inputSize; ++i) {
+                for (int j = 0; j < inputSize; ++j) {
+                    final int val = intValues[pixel++];
+                    if(quart){
+                        byteBuffer.put((byte) ((val >> 16) & 0xFF));
+                        byteBuffer.put((byte) ((val >> 8) & 0xFF));
+                        byteBuffer.put((byte) (val & 0xFF));
+                    } else {
+                        byteBuffer.putFloat((((val >> 16) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
+                        byteBuffer.putFloat((((val >> 8) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
+                        byteBuffer.putFloat((((val) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
+                    }
+
+                }
+            }
+        }
+        return byteBuffer;
     }
 
 }

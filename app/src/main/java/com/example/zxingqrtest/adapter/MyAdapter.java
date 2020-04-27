@@ -54,8 +54,8 @@ public class MyAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 //        holder.img_icon.setImageResource(mData.get(position).getImgId());
-        Bitmap bm = BitmapFactory.decodeFile(mData.get(position).getPicUrl());
-        holder.img_icon.setImageBitmap(bm);
+//        Bitmap bm = BitmapFactory.decodeFile(mData.get(position).getPicUrl());
+        holder.img_icon.setImageBitmap(mData.get(position).getBm());  //
         holder.txt_content.setText(mData.get(position).getContent());
         return convertView;
     }
