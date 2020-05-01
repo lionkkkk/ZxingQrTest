@@ -12,9 +12,6 @@ import androidx.camera.view.PreviewView;
 
 /**
  * 自定义CameraX预览页面
- * <p>
- *
- * @author 张钦
  * @date 2020/4/2
  */
 public class CameraXCustomPreviewView extends PreviewView {
@@ -168,7 +165,6 @@ public class CameraXCustomPreviewView extends PreviewView {
 
         @Override
         public void onLongPress(MotionEvent e) {
-//            LogUtils.i("onLongPress: 长按屏幕");
             if (mCustomTouchListener != null) {
                 mCustomTouchListener.longClick(e.getX(), e.getY());
             }
@@ -176,7 +172,6 @@ public class CameraXCustomPreviewView extends PreviewView {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-//            LogUtils.i("onFling: 滑动后松开");
             currentDistance = 0;
             lastDistance = 0;
             return true;
@@ -186,7 +181,6 @@ public class CameraXCustomPreviewView extends PreviewView {
     GestureDetector.OnDoubleTapListener onDoubleTapListener = new GestureDetector.OnDoubleTapListener() {
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-//            LogUtils.i("onSingleTapConfirmed: 严格的单击");
             if (mCustomTouchListener != null) {
                 mCustomTouchListener.click(e.getX(), e.getY());
             }
@@ -195,7 +189,6 @@ public class CameraXCustomPreviewView extends PreviewView {
 
         @Override
         public boolean onDoubleTap(MotionEvent e) {
-//            LogUtils.i("onDoubleTap: 双击");
             if (mCustomTouchListener != null) {
                 mCustomTouchListener.doubleClick(e.getX(), e.getY());
             }
@@ -204,7 +197,6 @@ public class CameraXCustomPreviewView extends PreviewView {
 
         @Override
         public boolean onDoubleTapEvent(MotionEvent e) {
-//            LogUtils.i("onDoubleTapEvent: 表示发生双击行为");
             return true;
         }
     };

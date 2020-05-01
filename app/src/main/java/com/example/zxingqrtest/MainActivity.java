@@ -43,9 +43,14 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -73,20 +78,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String LABEL_PATH = "labels.txt"; //标签文件，在assert文件夹中
     private static final int INPUT_SIZE = 32; //输入图片尺寸
     private static final boolean QUANT = false; //是否为量化版tfModel
+
     private Executor executor = Executors.newSingleThreadExecutor();
     private Vector<Bitmap> bv = new Vector<Bitmap>();                                     //测试返回切割图片使用
-    private Vector<Bitmap> bv1 = new Vector<Bitmap>(10,1); //检测算法使用
-    private Vector<int[]> rectMsg = new Vector<int []>(10,1); //检测条码边框信息
+    private Vector<Bitmap> bv1 = new Vector<Bitmap>(10, 1); //检测算法使用
+    private Vector<int[]> rectMsg = new Vector<int[]>(10, 1); //检测条码边框信息
     private int nums = 0;                                                                  //检测到的二维码个数，批量检测需要开的线程个数
 
     private ListView list_result;                           //listview加载数据
-    private MyAdapter mAdapter = null;
-    private List<Informations> mData = null;
-    private Informations minfo=null;
-    private String result="unDecode error";
-    private Handler handler ;                             //多线程相关
+    private MyAdapter mAdapter = null;                      //适配器
+    private List<Informations> mData = null;                //listview封装数据
+    private Informations minfo = null;
+    private String result = "unDecode error";
+    private Handler handler;                             //多线程相关
     private ExecutorService service;
-    private Handler mainHandler = new Handler(){
+    private Handler mainHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
@@ -103,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         initView();//初始化UI
         initTensorFlowAndLoadModel();   //加载tensorflow模型
-
     }
 
     //初始化各种控件
@@ -121,21 +126,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnLast.setOnClickListener(this);
         btnNext.setOnClickListener(this);
 
-        list_result=findViewById(R.id.list_result);
+        list_result = findViewById(R.id.list_result);
         mData = new LinkedList<Informations>();           //listview初始化
-        mAdapter = new MyAdapter((LinkedList<Informations>) mData,MainActivity.this);
+        mAdapter = new MyAdapter((LinkedList<Informations>) mData, MainActivity.this);
         list_result.setAdapter(mAdapter);       //各种初始化
-        list_result.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        list_result.setOnItemClickListener(new AdapterView.OnItemClickListener() {      //item点击事件
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Bitmap bm1=BitmapFactory.decodeFile(loadPicPath);
-                Bitmap bmLocate= PicProcessUtil.locateChosenCode(bm1,rectMsg.get(i));
-                mShowImg.setImageBitmap(bmLocate);
-//                int[] rect = rectMsg.get(i);
-//                Log.i("Main","切割块图信息: \n\r\r"+
-//                        String.valueOf(rect[0])+"  "+ String.valueOf(rect[1])+"  "+
-//                        String.valueOf(rect[2])+"  "+ String.valueOf(rect[3])+"  "+
-//                        String.valueOf(rect[4]));
+                Bitmap bm1 = BitmapFactory.decodeFile(loadPicPath);                   //获取原图
+                Bitmap bmLocate = PicProcessUtil.locateChosenCode(bm1, rectMsg.get(i)); //根据定位数据定位item对应的QR码
+                mShowImg.setImageBitmap(bmLocate);                                    //刷定位QR码图
             }
         });
     }
@@ -166,11 +166,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 100:
-                boolean writeExternalStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                boolean writeExternalStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED;//获取读写权限
                 boolean readExternalStorage = grantResults[1] == PackageManager.PERMISSION_GRANTED;
-                Log.e("MainActivity", Arrays.toString(grantResults));
                 if (grantResults.length > 0 && writeExternalStorage && readExternalStorage) {
-                    getImage();
+                    getImage();                                                              //获取图片
                 } else {
                     Toast.makeText(this, "请设置必要权限", Toast.LENGTH_SHORT).show();
                 }
@@ -200,8 +199,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case REQUEST_PICK_IMAGE:
                     if (data != null) {
                         loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData()); //存放打开的图片的路径
-                        Log.i(TAG, loadPicPath);
-                        Bitmap bm = BitmapFactory.decodeFile(loadPicPath);
+                        Bitmap bm = BitmapFactory.decodeFile(loadPicPath);                                   //暂存图片到bm同时显示到主界面
                         mShowImg.setImageBitmap(bm);
                     } else {
                         Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
@@ -224,25 +222,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btnDetect:          //批量检测
                 singleDetectIntent();
-                if(bv1.isEmpty()==true){
-                    Toast.makeText(MainActivity.this,"can't find rect",Toast.LENGTH_SHORT    );
+                if (bv1.isEmpty() == true) {
+                    Toast.makeText(MainActivity.this, "can't find rect", Toast.LENGTH_SHORT);
                     break;
                 }
                 btnNext.setVisibility(View.VISIBLE);
-                btnLast.setVisibility(View.VISIBLE);
-                picIndex = bv1.size()-1;  //显示结果
+                btnLast.setVisibility(View.VISIBLE);      //显示前后切换图片按钮
+                picIndex = bv1.size() - 1;                 //显示结果
                 mShowImg.setImageBitmap(bv1.get(picIndex));
                 picIndex = 0;
                 break;
             case R.id.btnBatch:           //批量识别
                 mAdapter.clear();         //清空Listview数据
-                if(nums!=0)
-                    service = Executors.newFixedThreadPool(nums);
-                for(int i=0;i<nums;i++)
-                    BatchDetectThread(bv.get(i),i);
+                if (nums != 0)
+                    service = Executors.newFixedThreadPool(nums);  //根据需要切割出来的图像个数开启线程
+                for (int i = 0; i < nums; i++)
+                    BatchDetectThread(bv.get(i),i);                //批量识别
                 break;
             case R.id.btn_last:  //上一张 切割测试
-                if(bv.isEmpty()==true)break;
+                if (bv.isEmpty() == true) break;
                 if (picIndex == 0) {
                     picIndex = bv.size() - 1;
                 } else {
@@ -251,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mShowImg.setImageBitmap(bv.get(picIndex));
                 break;
             case R.id.btn_next:  //下一张 切割测试
-                if(bv.isEmpty()==true)break;
+                if (bv.isEmpty() == true) break;
                 if (picIndex == bv.size() - 1) {
                     picIndex = 0;
                 } else {
@@ -262,23 +260,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //单个检测
+    //检测并定位
     private void singleDetectIntent() {
         try {
             Bitmap bm1 = BitmapFactory.decodeFile(loadPicPath);
-            bv1.clear(); //调用前，先删掉之前的全部图片，检测算法带回中间调试结果放在bv1中
+            bv1.clear();                 //调用前，先删掉之前的全部图片，检测算法带回中间调试结果放在bv1中
             rectMsg = PicProcessUtil.BatchQRcodeDetect(bm1, bv1, classifier);
             // 测试用例，根据rectMag切割图片，放在bv中，可选择切换显示
             bv.clear();
-            nums = rectMsg.size();
-            Log.i("Main","待切割图片数量: "+String.valueOf(nums));
-            for(int i=0; i<nums; i++){
+            nums = rectMsg.size();       //暂存切割的QR码个数
+            for (int i = 0; i < nums; i++) {
                 int[] rect = rectMsg.get(i);
                 bv.add(Bitmap.createBitmap(bm1, rect[1], rect[2], rect[3], rect[4]));
-                Log.i("Main","切割块图信息: \n\r\r"+
-                        String.valueOf(rect[0])+"  "+ String.valueOf(rect[1])+"  "+
-                        String.valueOf(rect[2])+"  "+ String.valueOf(rect[3])+"  "+
-                        String.valueOf(rect[4]));
             }
 
         } catch (Exception e) {
@@ -295,23 +288,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     //多线程批量识别二维码
-    private void BatchDetectThread(final Bitmap bm,int index){
-        service.submit(new Runnable(){
+    private void BatchDetectThread(final Bitmap bm, int index) {
+        service.submit(new Runnable() {
             @Override
             public void run() {
                 // TODO Auto-generated method stub
-                Log.i("Main", ""+Thread.currentThread().getName());
+                Log.i("Main", "" + Thread.currentThread().getName());
                 try {
-                    mainHandler.post(new Runnable(){
+                    mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             // TODO Auto-generated method stub
-                            try{
-                                result= DecoderUtil.decodeQR(bm).getText();       //识别
-                            }catch (Exception e){
-                                Log.e("Main", "Exception: "+Log.getStackTraceString(e));
+                            try {
+                                result = DecoderUtil.decodeQR(bm).getText();       //识别
+                            } catch (Exception e) {
+                                Log.e("Main", "Exception: " + Log.getStackTraceString(e));
                             }
-                            minfo = new Informations(bm, "NO."+index+"->"+result);
+                            minfo = new Informations(bm, "NO." + index + "->" + result);
                             mAdapter.add(minfo);//listview加载数据
                         }
                     });
@@ -321,6 +314,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+    }
+
+
+    //测试师兄文件夹中图片识别的准确率
+    private void corretRateTest() {
+        List<Map<String, Object>> cateList = new ArrayList<Map<String, Object>>();
+        String[] list_image = null;
+        float corret=0;
+        try {
+          //得到assets/processedimages/目录下的所有文件的文件名，以便后面打开操作时使用
+            list_image = MainActivity.this.getAssets().list("rotate_distort_100");
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        for (int i = 0; i < list_image.length; ++i) {
+            InputStream open = null;
+            try {
+                String temp = "rotate_distort_100/" + list_image[i];
+                open = MainActivity.this.getAssets().open(temp);
+                Bitmap bitmap = BitmapFactory.decodeStream(open);
+                try {
+                    String result;
+                    result = DecoderUtil.decodeQR(bitmap).getText();       //识别
+                    Log.i("Main","第"+i+"张可识别,结果为"+result);
+                    corret++;
+                } catch (Exception e) {
+                    Log.e("Main", "Exception: " + Log.getStackTraceString(e));
+                }
+                // Assign the bitmap to an ImageView in this layout
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (open != null) {
+                    try {
+                        open.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
+        float rate =corret/list_image.length;
+        Log.i("Main","rotate_distort_100"+"识别正确率为"+rate);
     }
 
     ///////////////////////////////////////////////////////////-------分隔线-------/////////////////////////////////////////////////
