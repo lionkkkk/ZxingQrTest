@@ -235,7 +235,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnOpenCamera:  //打开相机扫描
                 openCameraIntent();
                 break;
-            case R.id.btnDetect:          //批量检测
+            case R.id.btnDetect:             //批量检测
+                long startTime = System.currentTimeMillis(); // 获取开始时间
                 singleDetectIntent();
                 if (bv1.isEmpty() == true) {
                     Toast.makeText(MainActivity.this, "can't find rect", Toast.LENGTH_SHORT);
@@ -246,6 +247,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 picIndex = bv1.size() - 1;                 //显示结果
                 mShowImg.setImageBitmap(bv1.get(picIndex));
                 picIndex = 0;
+                long endTime = System.currentTimeMillis(); // 获取结束时间
+                Log.e("Main","检测部分代码运行时间： " + (endTime - startTime) + "ms");
                 break;
             case R.id.btnBatch:           //批量识别
                 mAdapter.clear();         //清空Listview数据
@@ -304,6 +307,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(intent);
     }
 
+    //保存主界面图片
     private void saveImage2local() {
         File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
         try {
