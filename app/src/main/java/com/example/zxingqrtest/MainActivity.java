@@ -12,9 +12,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -43,6 +46,9 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -51,10 +57,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.observers.Observers;
+import rx.schedulers.Schedulers;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -67,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btnOpenCamera;
     private Button btnDetect;
     private Button btnBatch;
+    private Button btnSave;
     private ImageButton btnLast;
     private ImageButton btnNext;
     private String loadPicPath;
@@ -119,12 +132,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnBatch = findViewById(R.id.btnBatch);
         btnLast = findViewById(R.id.btn_last);
         btnNext = findViewById(R.id.btn_next);
+        btnSave = findViewById(R.id.btn_save);
 
         btnOpenCamera.setOnClickListener(this);           //设置点击事件
         btnBatch.setOnClickListener(this);
         btnDetect.setOnClickListener(this);
         btnLast.setOnClickListener(this);
         btnNext.setOnClickListener(this);
+        btnSave.setOnClickListener(this);
 
         list_result = findViewById(R.id.list_result);
         mData = new LinkedList<Informations>();           //listview初始化
@@ -237,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (nums != 0)
                     service = Executors.newFixedThreadPool(nums);  //根据需要切割出来的图像个数开启线程
                 for (int i = 0; i < nums; i++)
-                    BatchDetectThread(bv.get(i),i);                //批量识别
+                    BatchDetectThread(bv.get(i), i);                //批量识别
                 break;
             case R.id.btn_last:  //上一张 切割测试
                 if (bv.isEmpty() == true) break;
@@ -256,6 +271,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     picIndex++;
                 }
                 mShowImg.setImageBitmap(bv.get(picIndex));
+                break;
+            case R.id.btn_save:  //保存图片
+                saveImage2local();
                 break;
         }
     }
@@ -286,6 +304,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(intent);
     }
 
+    private void saveImage2local() {
+        File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            Bitmap bitMap = ((BitmapDrawable) mShowImg.getDrawable()).getBitmap();//通过强制转化weiBitmapDrable然后获取Bitmap
+                   bitMap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);//然后按照指定的图片格式转换，并以stream方式保存文件
+            String msg = "图片保存成功: " + file.getAbsolutePath();
+            Log.i("Main",msg);
+            Log.i("Main","bmsize"+bitMap.getWidth());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     //多线程批量识别二维码
     private void BatchDetectThread(final Bitmap bm, int index) {
@@ -321,9 +352,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void corretRateTest() {
         List<Map<String, Object>> cateList = new ArrayList<Map<String, Object>>();
         String[] list_image = null;
-        float corret=0;
+        float corret = 0;
         try {
-          //得到assets/processedimages/目录下的所有文件的文件名，以便后面打开操作时使用
+            //得到assets/processedimages/目录下的所有文件的文件名，以便后面打开操作时使用
             list_image = MainActivity.this.getAssets().list("rotate_distort_100");
         } catch (IOException e1) {
             // TODO Auto-generated catch block
@@ -338,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     String result;
                     result = DecoderUtil.decodeQR(bitmap).getText();       //识别
-                    Log.i("Main","第"+i+"张可识别,结果为"+result);
+                    Log.i("Main", "第" + i + "张可识别,结果为" + result);
                     corret++;
                 } catch (Exception e) {
                     Log.e("Main", "Exception: " + Log.getStackTraceString(e));
@@ -357,8 +388,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         }
-        float rate =corret/list_image.length;
-        Log.i("Main","rotate_distort_100"+"识别正确率为"+rate);
+        float rate = corret / list_image.length;
+        Log.i("Main", "rotate_distort_100" + "识别正确率为" + rate);
     }
 
     ///////////////////////////////////////////////////////////-------分隔线-------/////////////////////////////////////////////////

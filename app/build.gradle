@@ -80,4 +80,7 @@ dependencies {
     compile 'org.tensorflow:tensorflow-lite:+'
     implementation 'org.tensorflow:tensorflow-lite:+'
 
+    //保存图片工具类所需依赖
+    compile 'io.reactivex:rxjava:1.1.5'
+    compile 'io.reactivex:rxandroid:1.2.0'
 }
