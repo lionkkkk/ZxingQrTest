@@ -1,8 +1,6 @@
 package com.example.zxingqrtest.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +10,6 @@ import android.widget.TextView;
 
 import com.example.zxingqrtest.R;
 import com.example.zxingqrtest.beans.Informations;
-
 import java.util.LinkedList;
 
 
@@ -53,8 +50,6 @@ public class MyAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-//        holder.img_icon.setImageResource(mData.get(position).getImgId());
-//        Bitmap bm = BitmapFactory.decodeFile(mData.get(position).getPicUrl());
         holder.img_icon.setImageBitmap(mData.get(position).getBm());  //
         holder.txt_content.setText(mData.get(position).getContent());
         return convertView;
@@ -98,8 +93,6 @@ public class MyAdapter extends BaseAdapter {
         }
         notifyDataSetChanged();
     }
-
-
 
     private class ViewHolder {
         ImageView img_icon;

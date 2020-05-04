@@ -277,20 +277,19 @@ public class CameraxTestActivity extends AppCompatActivity implements CameraXCon
     public void initImageAnalysis() {
 
         mImageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(1280, 720))  //分辨率，测试实际宽高为640x480
+                .setTargetResolution(new Size(1280, 720))  //分辨率，测试实际宽高为640x480,跟相机底层有关
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST) //非阻塞模式
                 .build();
         mImageAnalysis.setAnalyzer(executor, image -> {
-            //这里采用官方给的yuv转效率比较低
+            //这里采用官方给的yuv转效率比较低,所以借助了一个YUV_tool demo的YUV转bitmap 算法
             ImageProxy.PlaneProxy[] planes = image.getPlanes();
-            ByteBuffer b0 = planes[0].getBuffer();
+            ByteBuffer b0 = planes[0].getBuffer();  //3个buffer为YUV三个分量，但是需要进行提取
             ByteBuffer b1 = planes[1].getBuffer();
             ByteBuffer b2 = planes[2].getBuffer();
 
             int width = image.getWidth();
             int height= image.getHeight();
 
-            //算法一
             int r0 = b0.remaining(); //Y分量的长度
             int r1 = b1.remaining(); //U分量的长度
             int r2 = b2.remaining(); //V分量的长度
@@ -313,27 +312,24 @@ public class CameraxTestActivity extends AppCompatActivity implements CameraXCon
             byte[] data = new byte[y + u + v];
 
             //u,v分量需要调换，存放到data中
-            b0.get(data, 0, r0);     //y
+            b0.get(data, 0, r0);     // y
             b1.get(data, y, r1);            // u
             b2.get(data, y + u, r2); // v
 
             byte[] rotateData = new byte[y + u + v];           //暂存旋转数据
-            PicProcessUtil.rotateP90(data,rotateData,w0,h0);  //byte旋转
-            Bitmap bm = PicProcessUtil.pToBitmap(rotateData, h0, w0, true); //旋转后横竖对调
-//            Bitmap bm = PicProcessUtil.spToBitmap(rotateData, height,width,1,0); //第二种转换方式有较大色差
+            PicProcessUtil.rotateP90(data,rotateData,w0,h0);   //byte旋转
+            Bitmap bm = PicProcessUtil.pToBitmap(rotateData, h0, w0, true);     //旋转后横竖对调
+//            Bitmap bm = PicProcessUtil.spToBitmap(rotateData, height,width,1,0);  //第二种转换方式有较大色差
             try {
-//                String  result = DecoderUtil.decodeQR(bm).getText();
-//                Log.i("Main","decode:"+result);
-                bv_test.clear();                  //清楚中间结果
-                rectMsg = PicProcessUtil.BatchQRcodeDetect(bm, bv_test, classifier);
+                bv_test.clear(); //清除中间结果
+                rectMsg = PicProcessUtil.BatchQRcodeDetect(bm, bv_test, classifier); //调用分类器筛选
                 iv_test.setImageBitmap(bv_test.get(bv_test.size()-1));  //显示定位结果
             } catch (Exception e) {
+
             }
             image.close(); //分析完图像需要关闭image，否则将阻塞预览页面
         });
     }
-
-
 
     /**
      * 构建图像捕获用例
@@ -408,8 +404,6 @@ public class CameraxTestActivity extends AppCompatActivity implements CameraXCon
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                         String msg = "图片保存成功: " + file.getAbsolutePath();
                         Log.i("CameraxTestActivity", msg);
-//                        Bitmap bmp=BitmapFactory.decodeFile(file.getAbsolutePath());
-//                        iv_test.setImageBitmap(bmp);
                         Uri contentUri = Uri.fromFile(new File(file.getAbsolutePath()));
                         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, contentUri);
                         sendBroadcast(mediaScanIntent);
@@ -467,14 +461,4 @@ public class CameraxTestActivity extends AppCompatActivity implements CameraXCon
         }
     };
 
-//    private class MyAnalyzer implements ImageAnalysis.Analyzer {
-//
-//        @Override
-//        public void analyze( ImageProxy imageProxy) {
-//            final Image image = imageProxy.getImage();
-//            if(image != null) {
-//                Log.d("chao", image.getWidth() + "," + image.getHeight());
-//            }
-//        }
-//    }
 }

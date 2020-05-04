@@ -524,8 +524,9 @@ public class PicProcessUtil {
     public static Bitmap locateChosenCode(Bitmap bm, int[] rect) {
         Mat srcImg = new Mat();
         Utils.bitmapToMat(bm, srcImg);
+        int thickness = (rect[3]) / 24 + 1;
         Imgproc.rectangle(srcImg, new Point(rect[1],rect[2]), new Point(rect[1]+rect[3], rect[2]+rect[4]),
-                new Scalar(0, 255, 0, 10), 5);     //找到边框，填满
+                new Scalar(0, 255, 0, 10), thickness);     //找到边框，填满
         return MatToBitmap565(srcImg, "locate");
     }
 

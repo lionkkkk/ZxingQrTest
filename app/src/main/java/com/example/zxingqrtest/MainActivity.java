@@ -6,13 +6,12 @@
 package com.example.zxingqrtest;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +26,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -52,22 +50,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.observers.Observers;
-import rx.schedulers.Schedulers;
-
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -80,8 +69,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btnDetect;
     private Button btnBatch;
     private Button btnSave;
-    private ImageButton btnLast;
-    private ImageButton btnNext;
+    private Button btnLast;
+    private Button btnNext;
+    private Button btnChange;
+
     private String loadPicPath;
     private static final String TAG = "Main";
     private int picIndex = 0;
@@ -102,8 +93,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MyAdapter mAdapter = null;                      //适配器
     private List<Informations> mData = null;                //listview封装数据
     private Informations minfo = null;
-    private String result = "unDecode error";
-    private Handler handler;                             //多线程相关
     private ExecutorService service;
     private Handler mainHandler = new Handler() {
         @Override
@@ -128,11 +117,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initView() {
         mShowImg = (ImageView) findViewById(R.id.imageView);       //图片视图
         btnOpenCamera = findViewById(R.id.btnOpenCamera);          //打开相机扫描
-        btnDetect = findViewById(R.id.btnDetect);          //识别加载的图片
-        btnBatch = findViewById(R.id.btnBatch);
-        btnLast = findViewById(R.id.btn_last);
+        btnDetect = findViewById(R.id.btnDetect);          //检测并定位
+        btnBatch = findViewById(R.id.btnBatch);            //批量识别
+        btnLast = findViewById(R.id.btn_last);             //前后张
         btnNext = findViewById(R.id.btn_next);
-        btnSave = findViewById(R.id.btn_save);
+        btnSave = findViewById(R.id.btn_save);           //保存图片
+        btnChange = findViewById(R.id.btn_change);      //切换视图
 
         btnOpenCamera.setOnClickListener(this);           //设置点击事件
         btnBatch.setOnClickListener(this);
@@ -140,17 +130,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnLast.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnSave.setOnClickListener(this);
+        btnChange.setOnClickListener(this);
 
         list_result = findViewById(R.id.list_result);
         mData = new LinkedList<Informations>();           //listview初始化
         mAdapter = new MyAdapter((LinkedList<Informations>) mData, MainActivity.this);
-        list_result.setAdapter(mAdapter);       //各种初始化
+        list_result.setAdapter(mAdapter);                 //各种初始化
         list_result.setOnItemClickListener(new AdapterView.OnItemClickListener() {      //item点击事件
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Bitmap bm1 = BitmapFactory.decodeFile(loadPicPath);                   //获取原图
                 Bitmap bmLocate = PicProcessUtil.locateChosenCode(bm1, rectMsg.get(i)); //根据定位数据定位item对应的QR码
                 mShowImg.setImageBitmap(bmLocate);                                    //刷定位QR码图
+                setShowChoice(true);
             }
         });
     }
@@ -216,6 +208,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         loadPicPath = RealPathFromUriUtils.getRealPathFromUri(this, data.getData()); //存放打开的图片的路径
                         Bitmap bm = BitmapFactory.decodeFile(loadPicPath);                                   //暂存图片到bm同时显示到主界面
                         mShowImg.setImageBitmap(bm);
+                        setShowChoice(true);
                     } else {
                         Toast.makeText(this, "图片损坏，请重新选择", Toast.LENGTH_SHORT).show();
                     }
@@ -238,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnDetect:             //批量检测
                 long startTime = System.currentTimeMillis(); // 获取开始时间
                 singleDetectIntent();
-                if (bv1.isEmpty() == true) {
+                if (bv1.isEmpty()) {
                     Toast.makeText(MainActivity.this, "can't find rect", Toast.LENGTH_SHORT);
                     break;
                 }
@@ -248,7 +241,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mShowImg.setImageBitmap(bv1.get(picIndex));
                 picIndex = 0;
                 long endTime = System.currentTimeMillis(); // 获取结束时间
-                Log.e("Main","检测部分代码运行时间： " + (endTime - startTime) + "ms");
+                Log.e("Main", "检测部分代码运行时间： " + (endTime - startTime) + "ms");
+                setShowChoice(true); //主界面视图
                 break;
             case R.id.btnBatch:           //批量识别
                 mAdapter.clear();         //清空Listview数据
@@ -256,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     service = Executors.newFixedThreadPool(nums);  //根据需要切割出来的图像个数开启线程
                 for (int i = 0; i < nums; i++)
                     BatchDetectThread(bv.get(i), i);                //批量识别
+                setShowChoice(false);
                 break;
             case R.id.btn_last:  //上一张 切割测试
                 if (bv.isEmpty() == true) break;
@@ -278,6 +273,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_save:  //保存图片
                 saveImage2local();
                 break;
+            case R.id.btn_change:  //保存图片
+                if (list_result.getVisibility()==View.VISIBLE) {
+                    list_result.setVisibility(View.INVISIBLE);
+                    mShowImg.setVisibility(View.VISIBLE);
+                } else {
+                    list_result.setVisibility(View.VISIBLE);
+                    mShowImg.setVisibility(View.INVISIBLE);
+                }
+                break;
         }
     }
 
@@ -294,7 +298,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] rect = rectMsg.get(i);
                 bv.add(Bitmap.createBitmap(bm1, rect[1], rect[2], rect[3], rect[4]));
             }
-
         } catch (Exception e) {
 
         }
@@ -307,39 +310,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(intent);
     }
 
+    //true为图片视图
+    private void setShowChoice(boolean choice) {
+        if (choice) {
+            list_result.setVisibility(View.INVISIBLE);
+            mShowImg.setVisibility(View.VISIBLE);
+        } else {
+            list_result.setVisibility(View.VISIBLE);
+            mShowImg.setVisibility(View.INVISIBLE);
+        }
+    }
+
     //保存主界面图片
     private void saveImage2local() {
         File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             Bitmap bitMap = ((BitmapDrawable) mShowImg.getDrawable()).getBitmap();//通过强制转化weiBitmapDrable然后获取Bitmap
-                   bitMap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);//然后按照指定的图片格式转换，并以stream方式保存文件
+            bitMap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);//然后按照指定的图片格式转换，并以stream方式保存文件
             String msg = "图片保存成功: " + file.getAbsolutePath();
-            Log.i("Main",msg);
-            Log.i("Main","bmsize"+bitMap.getWidth());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    //多线程批量识别二维码
+    //多线程批量识别二维码，用service可以节省一定开销
     private void BatchDetectThread(final Bitmap bm, int index) {
         service.submit(new Runnable() {
             @Override
             public void run() {
                 // TODO Auto-generated method stub
-                Log.i("Main", "" + Thread.currentThread().getName());
                 try {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             // TODO Auto-generated method stub
+                            String result = "unDecode error";
+                            Log.i("Main", "thread running");
                             try {
                                 result = DecoderUtil.decodeQR(bm).getText();       //识别
                             } catch (Exception e) {
                                 Log.e("Main", "Exception: " + Log.getStackTraceString(e));
                             }
-                            minfo = new Informations(bm, "NO." + index + "->" + result);
+                            int id = index + 1;
+                            minfo = new Informations(bm, "NO." + id + "->" + result);
                             mAdapter.add(minfo);//listview加载数据
                         }
                     });
@@ -350,7 +364,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-
 
     //测试师兄文件夹中图片识别的准确率
     private void corretRateTest() {

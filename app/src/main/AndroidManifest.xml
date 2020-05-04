@@ -14,7 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".ThreadActivity"></activity>
-        <activity android:name=".SlideTestActivity" />
         <activity android:name=".CameraxTestActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
